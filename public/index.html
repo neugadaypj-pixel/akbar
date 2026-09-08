@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Market Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -11,21 +17,27 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="brand">
-        <span class="brand-icon">🏪</span>
-        <span class="brand-name" id="brand-name">Market Manager</span>
+        <div class="brand-icon">🏪</div>
+        <div class="brand-text">
+          <span class="brand-name" id="brand-name">Market Manager</span>
+          <span class="brand-tag">Business Suite</span>
+        </div>
       </div>
       <nav class="nav">
-        <button class="nav-item active" data-view="dashboard"><span>📊</span> Dashboard</button>
-        <button class="nav-item" data-view="pos"><span>🧾</span> New Sale (POS)</button>
-        <button class="nav-item" data-view="products"><span>👕</span> Products</button>
-        <button class="nav-item" data-view="customers"><span>👥</span> Customers</button>
-        <button class="nav-item" data-view="suppliers"><span>🚚</span> Suppliers</button>
-        <button class="nav-item" data-view="purchases"><span>📦</span> Purchases</button>
-        <button class="nav-item" data-view="expenses"><span>💸</span> Expenses</button>
-        <button class="nav-item" data-view="locations"><span>📍</span> Locations</button>
-        <button class="nav-item" data-view="reports"><span>📈</span> Reports</button>
-        <button class="nav-item" data-view="settings"><span>⚙️</span> Settings</button>
+        <button class="nav-item active" data-view="dashboard"><span class="nav-ico">📊</span> Dashboard</button>
+        <button class="nav-item" data-view="pos"><span class="nav-ico">🧾</span> New Sale (POS)</button>
+        <button class="nav-item" data-view="products"><span class="nav-ico">👕</span> Products</button>
+        <button class="nav-item" data-view="customers"><span class="nav-ico">👥</span> Customers</button>
+        <button class="nav-item" data-view="suppliers"><span class="nav-ico">🚚</span> Suppliers</button>
+        <button class="nav-item" data-view="purchases"><span class="nav-ico">📦</span> Purchases</button>
+        <button class="nav-item" data-view="expenses"><span class="nav-ico">💸</span> Expenses</button>
+        <button class="nav-item" data-view="locations"><span class="nav-ico">📍</span> Locations</button>
+        <button class="nav-item" data-view="reports"><span class="nav-ico">📈</span> Reports</button>
+        <button class="nav-item" data-view="settings"><span class="nav-ico">⚙️</span> Settings</button>
       </nav>
+      <div class="sidebar-footer">
+        <span class="dot"></span> Live · Data synced
+      </div>
     </aside>
 
     <!-- Main content -->

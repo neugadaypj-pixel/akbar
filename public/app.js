@@ -59,6 +59,20 @@ function toast(message, type = 'success') {
   setTimeout(() => el.remove(), 3000);
 }
 
+// ---------- KPI card helper ----------
+function kpiCard(icon, label, value, valueClass = '', accent = '') {
+  const accentStyle = accent ? `style="--kpi-accent:${accent}"` : '';
+  return `
+    <div class="kpi" ${accentStyle}>
+      <div class="kpi-top">
+        <span class="kpi-ico">${icon}</span>
+        <span class="label">${label}</span>
+      </div>
+      <span class="value ${valueClass}">${value}</span>
+    </div>
+  `;
+}
+
 // ---------- Modal ----------
 function openModal(title, bodyHtml, actionsHtml = '') {
   const container = document.getElementById('modal-container');
@@ -139,17 +153,17 @@ async function renderDashboard(el) {
     </div>
 
     <div class="grid grid-4">
-      <div class="kpi"><span class="label">Revenue</span><span class="value positive">${money(summary.revenue)}</span></div>
-      <div class="kpi"><span class="label">Expenses</span><span class="value negative">${money(summary.expenses)}</span></div>
-      <div class="kpi"><span class="label">Net Income</span><span class="value ${netClass}">${money(summary.netIncome)}</span></div>
-      <div class="kpi"><span class="label">Gross Profit</span><span class="value accent">${money(summary.profit)}</span></div>
+      ${kpiCard('💰', 'Revenue', money(summary.revenue), 'positive', 'linear-gradient(90deg,#16a34a,#22c55e)')}
+      ${kpiCard('💸', 'Expenses', money(summary.expenses), 'negative', 'linear-gradient(90deg,#ef4444,#f87171)')}
+      ${kpiCard('📈', 'Net Income', money(summary.netIncome), netClass, 'linear-gradient(90deg,#4f46e5,#7c3aed)')}
+      ${kpiCard('🏆', 'Gross Profit', money(summary.profit), 'accent', 'linear-gradient(90deg,#f59e0b,#fbbf24)')}
     </div>
 
     <div class="grid grid-4 mt">
-      <div class="kpi"><span class="label">Purchases</span><span class="value">${money(summary.purchases)}</span></div>
-      <div class="kpi"><span class="label">Payments Received</span><span class="value">${money(summary.payments)}</span></div>
-      <div class="kpi"><span class="label">Products</span><span class="value">${summary.productCount}</span></div>
-      <div class="kpi"><span class="label">Low Stock</span><span class="value" style="color:var(--warning)">${summary.lowStockCount}</span></div>
+      ${kpiCard('📦', 'Purchases', money(summary.purchases), '', 'linear-gradient(90deg,#0ea5e9,#38bdf8)')}
+      ${kpiCard('💳', 'Payments Received', money(summary.payments), '', 'linear-gradient(90deg,#14b8a6,#2dd4bf)')}
+      ${kpiCard('👕', 'Products', summary.productCount, '', 'linear-gradient(90deg,#8b5cf6,#a78bfa)')}
+      ${kpiCard('⚠️', 'Low Stock', summary.lowStockCount, '', 'linear-gradient(90deg,#f59e0b,#f97316)')}
     </div>
 
     <div class="grid grid-2 mt">
