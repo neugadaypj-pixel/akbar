@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: business-finance-tracker
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: DB_NAME
+        value: business-finance
