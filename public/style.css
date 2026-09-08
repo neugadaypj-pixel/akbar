@@ -308,6 +308,28 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+.profit-preview {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  margin-bottom: 14px;
+  display: none;
+}
+
+.profit-preview.positive {
+  display: block;
+  background: #e7f7ec;
+  border: 1px solid #bfe6cd;
+  color: #166534;
+}
+
+.profit-preview.negative {
+  display: block;
+  background: #fdeaea;
+  border: 1px solid #f5c6c6;
+  color: #b91c1c;
+}
+
 /* ---------- Forms ---------- */
 .form-row {
   display: grid;

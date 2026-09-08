@@ -114,6 +114,12 @@ router.get('/top-products', async (req, res) => {
           name: { $first: '$items.name' },
           quantity: { $sum: '$items.quantity' },
           revenue: { $sum: '$items.lineTotal' },
+          cost: { $sum: { $multiply: ['$items.quantity', '$items.costPrice'] } },
+        },
+      },
+      {
+        $addFields: {
+          profit: { $subtract: ['$revenue', '$cost'] },
         },
       },
       { $sort: { revenue: -1 } },
@@ -132,7 +138,7 @@ router.get('/by-location', async (req, res) => {
     const range = dateRangeFilter(req.query);
     const rows = await db.collection('sales').aggregate([
       { $match: { ...range, voided: { $ne: true } } },
-      { $group: { _id: '$locationId', revenue: { $sum: '$total' } } },
+      { $group: { _id: '$locationId', revenue: { $sum: '$total' }, profit: { $sum: '$grossProfit' } } },
     ]).toArray();
 
     const locations = await db.collection('locations').find({}).toArray();
@@ -142,6 +148,7 @@ router.get('/by-location', async (req, res) => {
     res.json(rows.map((r) => ({
       location: locMap[String(r._id)] || 'Unknown',
       revenue: r.revenue,
+      profit: r.profit || 0,
     })));
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -176,7 +176,7 @@ async function renderDashboard(el) {
         ${
           topProducts.length
             ? `<table>
-                <thead><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Revenue</th></tr></thead>
+                <thead><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Revenue</th><th class="text-right">Profit</th></tr></thead>
                 <tbody>
                   ${topProducts
                     .map(
@@ -184,6 +184,7 @@ async function renderDashboard(el) {
                         <td>${escapeHtml(p.name)}</td>
                         <td class="text-right">${p.quantity}</td>
                         <td class="text-right amount-pos">${money(p.revenue)}</td>
+                        <td class="text-right" style="color:var(--income);font-weight:700">${money(p.profit || 0)}</td>
                       </tr>`
                     )
                     .join('')}
@@ -492,7 +493,7 @@ async function renderProducts(el) {
         <table>
           <thead>
             <tr><th>Name</th><th>SKU</th><th>Category</th><th class="text-right">Cost</th>
-            <th class="text-right">Price</th><th class="text-right">Stock</th><th class="text-right">Reorder</th><th>Supplier</th><th></th></tr>
+            <th class="text-right">Price</th><th class="text-right">Profit/Item</th><th class="text-right">Stock</th><th class="text-right">Reorder</th><th>Supplier</th><th></th></tr>
           </thead>
           <tbody id="prod-tbody">
             ${products
@@ -504,6 +505,7 @@ async function renderProducts(el) {
                 <td>${escapeHtml(p.category)}</td>
                 <td class="text-right">${money(p.costPrice)}</td>
                 <td class="text-right">${money(p.sellPrice)}</td>
+                <td class="text-right" style="color:var(--income);font-weight:700">${money((p.sellPrice || 0) - (p.costPrice || 0))}</td>
                 <td class="text-right">${p.stock <= p.reorderLevel ? `<span class="badge low">${p.stock}</span>` : p.stock}</td>
                 <td class="text-right">${p.reorderLevel}</td>
                 <td>${escapeHtml(supplierMap[p.supplierId] || '—')}</td>
@@ -528,6 +530,26 @@ function filterProducts() {
   });
 }
 
+function updateProfitPreview() {
+  const cost = parseFloat(document.getElementById('f-cost')?.value) || 0;
+  const sell = parseFloat(document.getElementById('f-sell')?.value) || 0;
+  const profit = sell - cost;
+  const margin = sell > 0 ? ((profit / sell) * 100) : 0;
+  const el = document.getElementById('profit-preview');
+  if (!el) return;
+
+  if (sell > 0 && profit >= 0) {
+    el.innerHTML = `<span>Profit per item: <strong style="color:var(--income)">${money(profit)}</strong> · Margin: <strong>${margin.toFixed(1)}%</strong></span>`;
+    el.className = 'profit-preview positive';
+  } else if (sell > 0 && profit < 0) {
+    el.innerHTML = `<span>⚠️ Loss per item: <strong style="color:var(--expense)">${money(profit)}</strong></span>`;
+    el.className = 'profit-preview negative';
+  } else {
+    el.innerHTML = '';
+    el.className = 'profit-preview';
+  }
+}
+
 function productModal(product) {
   const suppliers = [];
   const supplierSelect = suppliers.map((s) => '').join('');
@@ -545,9 +567,10 @@ function productModal(product) {
       <div class="field"><label>Supplier</label><input type="text" id="f-supplier" placeholder="Supplier ID (optional)" value="${escapeHtml(product?.supplierId || '')}" /></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Cost Price</label><input type="number" id="f-cost" step="0.01" value="${product?.costPrice || 0}" /></div>
-      <div class="field"><label>Sell Price</label><input type="number" id="f-sell" step="0.01" value="${product?.sellPrice || 0}" /></div>
+      <div class="field"><label>Buying Price (Cost) *</label><input type="number" id="f-cost" step="0.01" min="0" value="${product?.costPrice || 0}" oninput="updateProfitPreview()" /></div>
+      <div class="field"><label>Selling Price *</label><input type="number" id="f-sell" step="0.01" min="0" value="${product?.sellPrice || 0}" oninput="updateProfitPreview()" /></div>
     </div>
+    <div class="profit-preview" id="profit-preview"></div>
     <div class="form-row">
       <div class="field"><label>Stock</label><input type="number" id="f-stock" value="${product?.stock || 0}" /></div>
       <div class="field"><label>Reorder Level</label><input type="number" id="f-reorder" value="${product?.reorderLevel || 5}" /></div>
@@ -556,6 +579,7 @@ function productModal(product) {
     `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
      <button class="btn btn-primary" onclick="saveProduct('${isEdit ? product._id : ''}')">Save</button>`
   );
+  updateProfitPreview();
 }
 
 async function saveProduct(id) {
@@ -1149,14 +1173,18 @@ async function renderReports(el) {
 
     <div class="grid grid-2 mt">
       <div class="card">
-        <h2>Revenue by Location</h2>
+        <h2>Revenue & Profit by Location</h2>
         ${
           byLocation.length
             ? `<table>
-                <thead><tr><th>Location</th><th class="text-right">Revenue</th></tr></thead>
+                <thead><tr><th>Location</th><th class="text-right">Revenue</th><th class="text-right">Profit</th></tr></thead>
                 <tbody>${byLocation
                   .map(
-                    (b) => `<tr><td>${escapeHtml(b.location)}</td><td class="text-right amount-pos">${money(b.revenue)}</td></tr>`
+                    (b) => `<tr>
+                      <td>${escapeHtml(b.location)}</td>
+                      <td class="text-right amount-pos">${money(b.revenue)}</td>
+                      <td class="text-right" style="color:var(--income);font-weight:700">${money(b.profit || 0)}</td>
+                    </tr>`
                   )
                   .join('')}</tbody>
               </table>`
@@ -1168,10 +1196,15 @@ async function renderReports(el) {
         ${
           topProducts.length
             ? `<table>
-                <thead><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Revenue</th></tr></thead>
+                <thead><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Revenue</th><th class="text-right">Profit</th></tr></thead>
                 <tbody>${topProducts
                   .map(
-                    (p) => `<tr><td>${escapeHtml(p.name)}</td><td class="text-right">${p.quantity}</td><td class="text-right amount-pos">${money(p.revenue)}</td></tr>`
+                    (p) => `<tr>
+                      <td>${escapeHtml(p.name)}</td>
+                      <td class="text-right">${p.quantity}</td>
+                      <td class="text-right amount-pos">${money(p.revenue)}</td>
+                      <td class="text-right" style="color:var(--income);font-weight:700">${money(p.profit || 0)}</td>
+                    </tr>`
                   )
                   .join('')}</tbody>
               </table>`
@@ -1238,6 +1271,7 @@ window.posFilterProducts = posFilterProducts;
 window.productModal = productModal;
 window.saveProduct = saveProduct;
 window.deleteProduct = deleteProduct;
+window.updateProfitPreview = updateProfitPreview;
 window.filterProducts = filterProducts;
 window.customerModal = customerModal;
 window.saveCustomer = saveCustomer;
