@@ -20,23 +20,28 @@
         <div class="brand-icon">🏪</div>
         <div class="brand-text">
           <span class="brand-name" id="brand-name">Market Manager</span>
-          <span class="brand-tag">Business Suite</span>
+          <span class="brand-tag" data-i18n="brand.tag">Business Suite</span>
         </div>
       </div>
       <nav class="nav">
-        <button class="nav-item active" data-view="dashboard"><span class="nav-ico">📊</span> Dashboard</button>
-        <button class="nav-item" data-view="pos"><span class="nav-ico">🧾</span> New Sale (POS)</button>
-        <button class="nav-item" data-view="products"><span class="nav-ico">👕</span> Products</button>
-        <button class="nav-item" data-view="customers"><span class="nav-ico">👥</span> Customers</button>
-        <button class="nav-item" data-view="suppliers"><span class="nav-ico">🚚</span> Suppliers</button>
-        <button class="nav-item" data-view="purchases"><span class="nav-ico">📦</span> Purchases</button>
-        <button class="nav-item" data-view="expenses"><span class="nav-ico">💸</span> Expenses</button>
-        <button class="nav-item" data-view="locations"><span class="nav-ico">📍</span> Locations</button>
-        <button class="nav-item" data-view="reports"><span class="nav-ico">📈</span> Reports</button>
-        <button class="nav-item" data-view="settings"><span class="nav-ico">⚙️</span> Settings</button>
+        <button class="nav-item active" data-view="dashboard"><span class="nav-ico">📊</span> <span data-i18n="nav.dashboard">Dashboard</span></button>
+        <button class="nav-item" data-view="pos"><span class="nav-ico">🧾</span> <span data-i18n="nav.pos">New Sale (POS)</span></button>
+        <button class="nav-item" data-view="products"><span class="nav-ico">👕</span> <span data-i18n="nav.products">Products</span></button>
+        <button class="nav-item" data-view="customers"><span class="nav-ico">👥</span> <span data-i18n="nav.customers">Customers</span></button>
+        <button class="nav-item" data-view="suppliers"><span class="nav-ico">🚚</span> <span data-i18n="nav.suppliers">Suppliers</span></button>
+        <button class="nav-item" data-view="purchases"><span class="nav-ico">📦</span> <span data-i18n="nav.purchases">Purchases</span></button>
+        <button class="nav-item" data-view="expenses"><span class="nav-ico">💸</span> <span data-i18n="nav.expenses">Expenses</span></button>
+        <button class="nav-item" data-view="locations"><span class="nav-ico">📍</span> <span data-i18n="nav.locations">Locations</span></button>
+        <button class="nav-item" data-view="reports"><span class="nav-ico">📈</span> <span data-i18n="nav.reports">Reports</span></button>
+        <button class="nav-item" data-view="settings"><span class="nav-ico">⚙️</span> <span data-i18n="nav.settings">Settings</span></button>
       </nav>
+      <div class="lang-switcher">
+        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+        <button class="lang-btn" data-lang="uz" onclick="setLanguage('uz')">UZ</button>
+        <button class="lang-btn" data-lang="ru" onclick="setLanguage('ru')">RU</button>
+      </div>
       <div class="sidebar-footer">
-        <span class="dot"></span> Live · Data synced
+        <span class="dot"></span> <span data-i18n="sidebar.live">Live · Data synced</span>
       </div>
     </aside>
 
@@ -52,6 +57,7 @@
   <!-- Modal container -->
   <div id="modal-container"></div>
 
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

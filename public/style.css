@@ -144,6 +144,38 @@ body {
   background: #fff;
 }
 
+.lang-switcher {
+  display: flex;
+  gap: 6px;
+  padding: 0 8px;
+}
+
+.lang-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sidebar-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: all 0.18s ease;
+}
+
+.lang-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.lang-btn.active {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
 .sidebar-footer {
   margin-top: auto;
   display: flex;

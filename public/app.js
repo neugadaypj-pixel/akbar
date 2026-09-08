@@ -1,5 +1,5 @@
 // ============================================================
-// Market Manager — single-page app
+// Market Manager — single-page app (i18n: en/uz/ru)
 // ============================================================
 
 // ---------- State ----------
@@ -24,9 +24,14 @@ async function api(path, options = {}) {
 }
 
 // ---------- Formatting helpers ----------
+function localeTag() {
+  const lang = window.getLanguage ? getLanguage() : 'en';
+  return { en: 'en-US', uz: 'uz-UZ', ru: 'ru-RU' }[lang] || 'en-US';
+}
+
 function money(value) {
   const num = Number(value) || 0;
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(localeTag(), {
     style: 'currency',
     currency: settings.currency || 'USD',
   }).format(num);
@@ -35,7 +40,7 @@ function money(value) {
 function fmtDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return d.toLocaleDateString(localeTag(), { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function today() {
@@ -81,11 +86,7 @@ function openModal(title, bodyHtml, actionsHtml = '') {
       <div class="modal">
         <h2>${escapeHtml(title)}</h2>
         <div class="modal-body">${bodyHtml}</div>
-        ${
-          actionsHtml
-            ? `<div class="modal-actions">${actionsHtml}</div>`
-            : ''
-        }
+        ${actionsHtml ? `<div class="modal-actions">${actionsHtml}</div>` : ''}
       </div>
     </div>
   `;
@@ -113,20 +114,20 @@ const views = {
 };
 
 let currentView = 'dashboard';
+window.currentView = 'dashboard';
 
 async function navigate(view) {
   currentView = view;
+  window.currentView = view;
   document.querySelectorAll('.nav-item').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.view === view);
   });
   const container = document.getElementById('view-container');
-  container.innerHTML = '<p class="empty-state">Loading…</p>';
+  container.innerHTML = `<p class="empty-state">${t('loading')}</p>`;
   try {
     await views[view](container);
   } catch (err) {
-    container.innerHTML = `<div class="card"><p class="empty-state">${escapeHtml(
-      err.message
-    )}</p></div>`;
+    container.innerHTML = `<div class="card"><p class="empty-state">${escapeHtml(err.message)}</p></div>`;
   }
 }
 
@@ -146,37 +147,37 @@ async function renderDashboard(el) {
   el.innerHTML = `
     <div class="page-header">
       <div>
-        <h1>📊 Dashboard</h1>
-        <p class="subtitle">Overview of ${escapeHtml(settings.businessName)}</p>
+        <h1>📊 ${t('dash.title')}</h1>
+        <p class="subtitle">${t('dash.subtitle')} ${escapeHtml(settings.businessName)}</p>
       </div>
-      <button class="btn btn-primary" onclick="navigate('pos')">+ New Sale</button>
+      <button class="btn btn-primary" onclick="navigate('pos')">${t('dash.newSale')}</button>
     </div>
 
     <div class="grid grid-4">
-      ${kpiCard('💰', 'Revenue', money(summary.revenue), 'positive', 'linear-gradient(90deg,#16a34a,#22c55e)')}
-      ${kpiCard('💸', 'Expenses', money(summary.expenses), 'negative', 'linear-gradient(90deg,#ef4444,#f87171)')}
-      ${kpiCard('📈', 'Net Income', money(summary.netIncome), netClass, 'linear-gradient(90deg,#4f46e5,#7c3aed)')}
-      ${kpiCard('🏆', 'Gross Profit', money(summary.profit), 'accent', 'linear-gradient(90deg,#f59e0b,#fbbf24)')}
+      ${kpiCard('💰', t('kpi.revenue'), money(summary.revenue), 'positive', 'linear-gradient(90deg,#16a34a,#22c55e)')}
+      ${kpiCard('💸', t('kpi.expenses'), money(summary.expenses), 'negative', 'linear-gradient(90deg,#ef4444,#f87171)')}
+      ${kpiCard('📈', t('kpi.netIncome'), money(summary.netIncome), netClass, 'linear-gradient(90deg,#4f46e5,#7c3aed)')}
+      ${kpiCard('🏆', t('kpi.grossProfit'), money(summary.profit), 'accent', 'linear-gradient(90deg,#f59e0b,#fbbf24)')}
     </div>
 
     <div class="grid grid-4 mt">
-      ${kpiCard('📦', 'Purchases', money(summary.purchases), '', 'linear-gradient(90deg,#0ea5e9,#38bdf8)')}
-      ${kpiCard('💳', 'Payments Received', money(summary.payments), '', 'linear-gradient(90deg,#14b8a6,#2dd4bf)')}
-      ${kpiCard('👕', 'Products', summary.productCount, '', 'linear-gradient(90deg,#8b5cf6,#a78bfa)')}
-      ${kpiCard('⚠️', 'Low Stock', summary.lowStockCount, '', 'linear-gradient(90deg,#f59e0b,#f97316)')}
+      ${kpiCard('📦', t('kpi.purchases'), money(summary.purchases), '', 'linear-gradient(90deg,#0ea5e9,#38bdf8)')}
+      ${kpiCard('💳', t('kpi.payments'), money(summary.payments), '', 'linear-gradient(90deg,#14b8a6,#2dd4bf)')}
+      ${kpiCard('👕', t('kpi.products'), summary.productCount, '', 'linear-gradient(90deg,#8b5cf6,#a78bfa)')}
+      ${kpiCard('⚠️', t('kpi.lowStock'), summary.lowStockCount, '', 'linear-gradient(90deg,#f59e0b,#f97316)')}
     </div>
 
     <div class="grid grid-2 mt">
       <div class="card">
-        <h2>Revenue vs Expenses</h2>
+        <h2>${t('dash.revVsExp')}</h2>
         ${renderBarChart(chart)}
       </div>
       <div class="card">
-        <h2>Top Selling Products</h2>
+        <h2>${t('dash.topProducts')}</h2>
         ${
           topProducts.length
             ? `<table>
-                <thead><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Revenue</th><th class="text-right">Profit</th></tr></thead>
+                <thead><tr><th>${t('table.product')}</th><th class="text-right">${t('table.qty')}</th><th class="text-right">${t('table.revenue')}</th><th class="text-right">${t('table.profit')}</th></tr></thead>
                 <tbody>
                   ${topProducts
                     .map(
@@ -190,17 +191,17 @@ async function renderDashboard(el) {
                     .join('')}
                 </tbody>
               </table>`
-            : '<p class="empty-state">No sales yet</p>'
+            : `<p class="empty-state">${t('empty.noSales')}</p>`
         }
       </div>
     </div>
 
     <div class="card mt">
-      <h2>⚠️ Low Stock Alerts</h2>
+      <h2>${t('dash.lowStockAlerts')}</h2>
       ${
         lowStock.length
           ? `<div class="table-wrap"><table>
-              <thead><tr><th>Product</th><th>Category</th><th class="text-right">Stock</th><th class="text-right">Reorder Level</th></tr></thead>
+              <thead><tr><th>${t('table.product')}</th><th>${t('table.category')}</th><th class="text-right">${t('table.stock')}</th><th class="text-right">${t('table.reorder')}</th></tr></thead>
               <tbody>
                 ${lowStock
                   .map(
@@ -214,14 +215,14 @@ async function renderDashboard(el) {
                   .join('')}
               </tbody>
             </table></div>`
-          : '<p class="empty-state">All products are sufficiently stocked 🎉</p>'
+          : `<p class="empty-state">${t('dash.lowStockOk')}</p>`
       }
     </div>
   `;
 }
 
 function renderBarChart(chart) {
-  if (!chart.length) return '<p class="empty-state">No data for this period</p>';
+  if (!chart.length) return `<p class="empty-state">${t('empty.noData')}</p>`;
   const max = Math.max(...chart.map((c) => Math.max(c.revenue, c.expenses)), 1);
 
   const bars = chart
@@ -238,8 +239,8 @@ function renderBarChart(chart) {
 
   return `
     <div class="bar-legend">
-      <span><span class="dot" style="background:var(--income)"></span>Revenue</span>
-      <span><span class="dot" style="background:var(--expense)"></span>Expenses</span>
+      <span><span class="dot" style="background:var(--income)"></span>${t('kpi.revenue')}</span>
+      <span><span class="dot" style="background:var(--expense)"></span>${t('kpi.expenses')}</span>
     </div>
     <div class="bar-chart">${bars}</div>
   `;
@@ -260,14 +261,14 @@ async function renderPOS(el) {
 
   el.innerHTML = `
     <div class="page-header">
-      <div><h1>🧾 New Sale</h1><p class="subtitle">Point of sale</p></div>
+      <div><h1>🧾 ${t('pos.title')}</h1><p class="subtitle">${t('pos.subtitle')}</p></div>
     </div>
 
     <div class="pos-layout">
       <div class="card">
-        <h2>Products</h2>
+        <h2>${t('pos.products')}</h2>
         <div class="toolbar">
-          <input type="text" id="pos-search" placeholder="Search products…" oninput="posFilterProducts()" />
+          <input type="text" id="pos-search" placeholder="${t('pos.search')}" oninput="posFilterProducts()" />
         </div>
         <div class="product-grid" id="pos-product-grid">
           ${products
@@ -276,7 +277,7 @@ async function renderPOS(el) {
             <div class="product-tile ${p.stock <= 0 ? 'out' : ''}" data-id="${p._id}" onclick="posAddToCart('${p._id}')">
               <div class="pname">${escapeHtml(p.name)}</div>
               <div class="pprice">${money(p.sellPrice)}</div>
-              <div class="pstock">Stock: ${p.stock}</div>
+              <div class="pstock">${t('pos.stock')} ${p.stock}</div>
             </div>`
             )
             .join('')}
@@ -284,25 +285,21 @@ async function renderPOS(el) {
       </div>
 
       <div class="card">
-        <h2>Current Sale</h2>
+        <h2>${t('pos.currentSale')}</h2>
 
         <div class="field mb">
-          <label>Customer (optional)</label>
+          <label>${t('pos.customer')}</label>
           <select id="pos-customer">
-            <option value="">— Walk-in customer —</option>
-            ${customers
-              .map((c) => `<option value="${c._id}">${escapeHtml(c.name)}</option>`)
-              .join('')}
+            <option value="">${t('pos.walkIn')}</option>
+            ${customers.map((c) => `<option value="${c._id}">${escapeHtml(c.name)}</option>`).join('')}
           </select>
         </div>
 
         <div class="field mb">
-          <label>Location</label>
+          <label>${t('pos.location')}</label>
           <select id="pos-location">
-            <option value="">— Select location —</option>
-            ${locations
-              .map((l) => `<option value="${l._id}">${escapeHtml(l.name)}</option>`)
-              .join('')}
+            <option value="">${t('pos.selectLocation')}</option>
+            ${locations.map((l) => `<option value="${l._id}">${escapeHtml(l.name)}</option>`).join('')}
           </select>
         </div>
 
@@ -310,31 +307,31 @@ async function renderPOS(el) {
         <div class="cart-totals" id="pos-totals"></div>
 
         <div class="field mb">
-          <label>Discount</label>
+          <label>${t('pos.discount')}</label>
           <input type="number" id="pos-discount" value="0" min="0" step="0.01" oninput="posRenderCart()" />
         </div>
 
         <div class="field mb">
-          <label>Payment Type</label>
+          <label>${t('pos.paymentType')}</label>
           <select id="pos-payment-type" onchange="posRenderCart()">
-            <option value="cash">Cash</option>
-            <option value="card">Card</option>
-            <option value="credit">Credit (on account)</option>
-            <option value="mixed">Mixed</option>
+            <option value="cash">${t('pos.cash')}</option>
+            <option value="card">${t('pos.card')}</option>
+            <option value="credit">${t('pos.credit')}</option>
+            <option value="mixed">${t('pos.mixed')}</option>
           </select>
         </div>
 
         <div class="field mb" id="pos-paid-field">
-          <label>Amount Paid</label>
+          <label>${t('pos.amountPaid')}</label>
           <input type="number" id="pos-amount-paid" min="0" step="0.01" oninput="posRenderCart()" />
         </div>
 
         <div class="field mb">
-          <label>Notes</label>
-          <input type="text" id="pos-notes" placeholder="Optional note" />
+          <label>${t('pos.notes')}</label>
+          <input type="text" id="pos-notes" placeholder="${t('pos.notePlaceholder')}" />
         </div>
 
-        <button class="btn btn-success" style="width:100%" onclick="posSubmitSale()">💵 Complete Sale</button>
+        <button class="btn btn-success" style="width:100%" onclick="posSubmitSale()">${t('pos.complete')}</button>
       </div>
     </div>
   `;
@@ -377,8 +374,7 @@ function posRenderCart() {
       return `
         <div class="cart-item">
           <span style="flex:1">${escapeHtml(name)}</span>
-          <input type="number" class="qty" min="1" value="${item.quantity}"
-            onchange="posSetQty(${idx}, this.value)" />
+          <input type="number" class="qty" min="1" value="${item.quantity}" onchange="posSetQty(${idx}, this.value)" />
           <span style="width:80px;text-align:right">${money(lineTotal)}</span>
           <button class="btn btn-danger btn-sm" onclick="posRemoveItem(${idx})">✕</button>
         </div>`;
@@ -398,19 +394,17 @@ function posRenderCart() {
 
   const balanceDue = total - amountPaid;
 
-  cartEl.innerHTML =
-    itemsHtml ||
-    '<p class="empty-state" style="padding:10px 0">Cart is empty — click a product to add it.</p>';
+  cartEl.innerHTML = itemsHtml || `<p class="empty-state" style="padding:10px 0">${t('pos.emptyCart')}</p>`;
 
   document.getElementById('pos-totals').innerHTML = `
-    <div class="row"><span>Subtotal</span><span>${money(subtotal)}</span></div>
-    <div class="row"><span>Discount</span><span>−${money(discount)}</span></div>
-    <div class="row grand"><span>Total</span><span>${money(total)}</span></div>
-    <div class="row"><span>Paid</span><span>${money(amountPaid)}</span></div>
+    <div class="row"><span>${t('pos.subtotal')}</span><span>${money(subtotal)}</span></div>
+    <div class="row"><span>${t('pos.discount')}</span><span>−${money(discount)}</span></div>
+    <div class="row grand"><span>${t('pos.total')}</span><span>${money(total)}</span></div>
+    <div class="row"><span>${t('pos.paid')}</span><span>${money(amountPaid)}</span></div>
     ${
       balanceDue > 0
-        ? `<div class="row"><span>Balance due</span><span style="color:var(--expense)">${money(balanceDue)}</span></div>`
-        : `<div class="row"><span>Change</span><span style="color:var(--income)">${money(-balanceDue)}</span></div>`
+        ? `<div class="row"><span>${t('pos.balanceDue')}</span><span style="color:var(--expense)">${money(balanceDue)}</span></div>`
+        : `<div class="row"><span>${t('pos.change')}</span><span style="color:var(--income)">${money(-balanceDue)}</span></div>`
     }
   `;
 }
@@ -428,7 +422,7 @@ function posRemoveItem(idx) {
 
 async function posSubmitSale() {
   if (cart.length === 0) {
-    toast('Cart is empty', 'error');
+    toast(t('pos.cartEmpty'), 'error');
     return;
   }
 
@@ -439,7 +433,6 @@ async function posSubmitSale() {
   const locationId = document.getElementById('pos-location').value;
   const notes = document.getElementById('pos-notes').value;
 
-  // Gather prices from the grid
   const items = cart.map((item) => {
     const tile = document.querySelector(`#pos-product-grid [data-id="${item.productId}"]`);
     const priceText = tile?.querySelector('.pprice')?.textContent || '0';
@@ -460,7 +453,7 @@ async function posSubmitSale() {
 
   try {
     await api('/api/sales', { method: 'POST', body: JSON.stringify(payload) });
-    toast('Sale completed successfully');
+    toast(t('pos.saleComplete'));
     navigate('dashboard');
   } catch (err) {
     toast(err.message, 'error');
@@ -479,21 +472,21 @@ async function renderProducts(el) {
 
   el.innerHTML = `
     <div class="page-header">
-      <div><h1>👕 Products</h1><p class="subtitle">Inventory management</p></div>
-      <button class="btn btn-primary" onclick="productModal(null)">+ Add Product</button>
+      <div><h1>👕 ${t('products.title')}</h1><p class="subtitle">${t('products.subtitle')}</p></div>
+      <button class="btn btn-primary" onclick="productModal(null)">${t('products.add')}</button>
     </div>
 
     <div class="card">
       <div class="toolbar">
-        <input type="text" id="prod-search" placeholder="Search products…" oninput="filterProducts()" />
+        <input type="text" id="prod-search" placeholder="${t('products.search')}" oninput="filterProducts()" />
         <div class="spacer"></div>
-        <span class="text-muted">${products.length} products</span>
+        <span class="text-muted">${products.length} ${t('products.count')}</span>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Name</th><th>SKU</th><th>Category</th><th class="text-right">Cost</th>
-            <th class="text-right">Price</th><th class="text-right">Profit/Item</th><th class="text-right">Stock</th><th class="text-right">Reorder</th><th>Supplier</th><th></th></tr>
+            <tr><th>${t('product.name')}</th><th>${t('product.sku')}</th><th>${t('table.category')}</th><th class="text-right">${t('product.cost')}</th>
+            <th class="text-right">${t('product.price')}</th><th class="text-right">${t('product.profitItem')}</th><th class="text-right">${t('table.stock')}</th><th class="text-right">${t('table.reorder')}</th><th>${t('product.supplier')}</th><th></th></tr>
           </thead>
           <tbody id="prod-tbody">
             ${products
@@ -510,8 +503,8 @@ async function renderProducts(el) {
                 <td class="text-right">${p.reorderLevel}</td>
                 <td>${escapeHtml(supplierMap[p.supplierId] || '—')}</td>
                 <td class="text-right">
-                  <button class="btn btn-outline btn-sm" onclick='productModal(${JSON.stringify(p)})'>Edit</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p._id}')">Delete</button>
+                  <button class="btn btn-outline btn-sm" onclick='productModal(${JSON.stringify(p)})'>${t('common.edit')}</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p._id}')">${t('common.delete')}</button>
                 </td>
               </tr>`
               )
@@ -534,15 +527,15 @@ function updateProfitPreview() {
   const cost = parseFloat(document.getElementById('f-cost')?.value) || 0;
   const sell = parseFloat(document.getElementById('f-sell')?.value) || 0;
   const profit = sell - cost;
-  const margin = sell > 0 ? ((profit / sell) * 100) : 0;
+  const margin = sell > 0 ? (profit / sell) * 100 : 0;
   const el = document.getElementById('profit-preview');
   if (!el) return;
 
   if (sell > 0 && profit >= 0) {
-    el.innerHTML = `<span>Profit per item: <strong style="color:var(--income)">${money(profit)}</strong> · Margin: <strong>${margin.toFixed(1)}%</strong></span>`;
+    el.innerHTML = `<span>${t('product.profitPreview')} <strong style="color:var(--income)">${money(profit)}</strong> · ${t('product.margin')} <strong>${margin.toFixed(1)}%</strong></span>`;
     el.className = 'profit-preview positive';
   } else if (sell > 0 && profit < 0) {
-    el.innerHTML = `<span>⚠️ Loss per item: <strong style="color:var(--expense)">${money(profit)}</strong></span>`;
+    el.innerHTML = `<span>${t('product.lossPreview')} <strong style="color:var(--expense)">${money(profit)}</strong></span>`;
     el.className = 'profit-preview negative';
   } else {
     el.innerHTML = '';
@@ -551,33 +544,31 @@ function updateProfitPreview() {
 }
 
 function productModal(product) {
-  const suppliers = [];
-  const supplierSelect = suppliers.map((s) => '').join('');
   const isEdit = !!product;
 
   openModal(
-    isEdit ? 'Edit Product' : 'Add Product',
+    isEdit ? t('product.editTitle') : t('product.addTitle'),
     `
     <div class="form-row">
-      <div class="field"><label>Name *</label><input type="text" id="f-name" value="${escapeHtml(product?.name || '')}" /></div>
-      <div class="field"><label>SKU</label><input type="text" id="f-sku" value="${escapeHtml(product?.sku || '')}" /></div>
+      <div class="field"><label>${t('product.name')} *</label><input type="text" id="f-name" value="${escapeHtml(product?.name || '')}" /></div>
+      <div class="field"><label>${t('product.sku')}</label><input type="text" id="f-sku" value="${escapeHtml(product?.sku || '')}" /></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Category</label><input type="text" id="f-category" value="${escapeHtml(product?.category || 'General')}" /></div>
-      <div class="field"><label>Supplier</label><input type="text" id="f-supplier" placeholder="Supplier ID (optional)" value="${escapeHtml(product?.supplierId || '')}" /></div>
+      <div class="field"><label>${t('table.category')}</label><input type="text" id="f-category" value="${escapeHtml(product?.category || 'General')}" /></div>
+      <div class="field"><label>${t('product.supplier')}</label><input type="text" id="f-supplier" placeholder="${t('supplierIdPlaceholder')}" value="${escapeHtml(product?.supplierId || '')}" /></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Buying Price (Cost) *</label><input type="number" id="f-cost" step="0.01" min="0" value="${product?.costPrice || 0}" oninput="updateProfitPreview()" /></div>
-      <div class="field"><label>Selling Price *</label><input type="number" id="f-sell" step="0.01" min="0" value="${product?.sellPrice || 0}" oninput="updateProfitPreview()" /></div>
+      <div class="field"><label>${t('product.buyingPrice')}</label><input type="number" id="f-cost" step="0.01" min="0" value="${product?.costPrice || 0}" oninput="updateProfitPreview()" /></div>
+      <div class="field"><label>${t('product.sellingPrice')}</label><input type="number" id="f-sell" step="0.01" min="0" value="${product?.sellPrice || 0}" oninput="updateProfitPreview()" /></div>
     </div>
     <div class="profit-preview" id="profit-preview"></div>
     <div class="form-row">
-      <div class="field"><label>Stock</label><input type="number" id="f-stock" value="${product?.stock || 0}" /></div>
-      <div class="field"><label>Reorder Level</label><input type="number" id="f-reorder" value="${product?.reorderLevel || 5}" /></div>
+      <div class="field"><label>${t('product.stock')}</label><input type="number" id="f-stock" value="${product?.stock || 0}" /></div>
+      <div class="field"><label>${t('product.reorder')}</label><input type="number" id="f-reorder" value="${product?.reorderLevel || 5}" /></div>
     </div>
     `,
-    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-primary" onclick="saveProduct('${isEdit ? product._id : ''}')">Save</button>`
+    `<button class="btn btn-outline" onclick="closeModal()">${t('common.cancel')}</button>
+     <button class="btn btn-primary" onclick="saveProduct('${isEdit ? product._id : ''}')">${t('common.save')}</button>`
   );
   updateProfitPreview();
 }
@@ -601,7 +592,7 @@ async function saveProduct(id) {
       await api('/api/products', { method: 'POST', body: JSON.stringify(payload) });
     }
     closeModal();
-    toast('Product saved');
+    toast(t('product.saved'));
     navigate('products');
   } catch (err) {
     toast(err.message, 'error');
@@ -609,10 +600,10 @@ async function saveProduct(id) {
 }
 
 async function deleteProduct(id) {
-  if (!confirm('Delete this product?')) return;
+  if (!confirm(t('product.confirmDelete'))) return;
   try {
     await api(`/api/products/${id}`, { method: 'DELETE' });
-    toast('Product deleted');
+    toast(t('product.deleted'));
     navigate('products');
   } catch (err) {
     toast(err.message, 'error');
@@ -628,17 +619,17 @@ async function renderCustomers(el) {
 
   el.innerHTML = `
     <div class="page-header">
-      <div><h1>👥 Customers</h1><p class="subtitle">${customers.length} customers · total outstanding ${money(totalDebt)}</p></div>
-      <button class="btn btn-primary" onclick="customerModal(null)">+ Add Customer</button>
+      <div><h1>👥 ${t('customers.title')}</h1><p class="subtitle">${customers.length} ${t('customers.subtitle')} ${money(totalDebt)}</p></div>
+      <button class="btn btn-primary" onclick="customerModal(null)">${t('customers.add')}</button>
     </div>
 
     <div class="card">
       <div class="toolbar">
-        <input type="text" id="cust-search" placeholder="Search by name or phone…" oninput="filterCustomers()" />
+        <input type="text" id="cust-search" placeholder="${t('customers.search')}" oninput="filterCustomers()" />
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th class="text-right">Debt</th><th></th></tr></thead>
+          <thead><tr><th>${t('customer.name')}</th><th>${t('customer.phone')}</th><th>${t('customer.email')}</th><th class="text-right">${t('customer.debt')}</th><th></th></tr></thead>
           <tbody>
             ${customers
               .map(
@@ -649,9 +640,9 @@ async function renderCustomers(el) {
                 <td>${escapeHtml(c.email || '—')}</td>
                 <td class="text-right">${c.debt > 0 ? `<span class="amount-neg">${money(c.debt)}</span>` : money(c.debt)}</td>
                 <td class="text-right">
-                  <button class="btn btn-success btn-sm" onclick="paymentModal('${c._id}', '${escapeHtml(c.name)}')">Receive Payment</button>
-                  <button class="btn btn-outline btn-sm" onclick="customerHistory('${c._id}')">History</button>
-                  <button class="btn btn-outline btn-sm" onclick='customerModal(${JSON.stringify(c)})'>Edit</button>
+                  <button class="btn btn-success btn-sm" onclick="paymentModal('${c._id}', '${escapeHtml(c.name)}')">${t('customer.receive')}</button>
+                  <button class="btn btn-outline btn-sm" onclick="customerHistory('${c._id}')">${t('customer.history')}</button>
+                  <button class="btn btn-outline btn-sm" onclick='customerModal(${JSON.stringify(c)})'>${t('common.edit')}</button>
                 </td>
               </tr>`
               )
@@ -673,20 +664,20 @@ function filterCustomers() {
 function customerModal(customer) {
   const isEdit = !!customer;
   openModal(
-    isEdit ? 'Edit Customer' : 'Add Customer',
+    isEdit ? t('customer.editTitle') : t('customer.addTitle'),
     `
     <div class="form-row">
-      <div class="field"><label>Name *</label><input type="text" id="f-name" value="${escapeHtml(customer?.name || '')}" /></div>
-      <div class="field"><label>Phone</label><input type="text" id="f-phone" value="${escapeHtml(customer?.phone || '')}" /></div>
+      <div class="field"><label>${t('customer.name')} *</label><input type="text" id="f-name" value="${escapeHtml(customer?.name || '')}" /></div>
+      <div class="field"><label>${t('customer.phone')}</label><input type="text" id="f-phone" value="${escapeHtml(customer?.phone || '')}" /></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Email</label><input type="text" id="f-email" value="${escapeHtml(customer?.email || '')}" /></div>
-      <div class="field"><label>Address</label><input type="text" id="f-address" value="${escapeHtml(customer?.address || '')}" /></div>
+      <div class="field"><label>${t('customer.email')}</label><input type="text" id="f-email" value="${escapeHtml(customer?.email || '')}" /></div>
+      <div class="field"><label>${t('customer.address')}</label><input type="text" id="f-address" value="${escapeHtml(customer?.address || '')}" /></div>
     </div>
-    <div class="field"><label>Notes</label><textarea id="f-notes">${escapeHtml(customer?.notes || '')}</textarea></div>
+    <div class="field"><label>${t('customer.notes')}</label><textarea id="f-notes">${escapeHtml(customer?.notes || '')}</textarea></div>
     `,
-    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-primary" onclick="saveCustomer('${isEdit ? customer._id : ''}')">Save</button>`
+    `<button class="btn btn-outline" onclick="closeModal()">${t('common.cancel')}</button>
+     <button class="btn btn-primary" onclick="saveCustomer('${isEdit ? customer._id : ''}')">${t('common.save')}</button>`
   );
 }
 
@@ -705,7 +696,7 @@ async function saveCustomer(id) {
       await api('/api/customers', { method: 'POST', body: JSON.stringify(payload) });
     }
     closeModal();
-    toast('Customer saved');
+    toast(t('customer.saved'));
     navigate('customers');
   } catch (err) {
     toast(err.message, 'error');
@@ -714,17 +705,17 @@ async function saveCustomer(id) {
 
 function paymentModal(customerId, customerName) {
   openModal(
-    `Receive Payment — ${customerName}`,
+    `${t('payment.title')} — ${customerName}`,
     `
-    <div class="field mb"><label>Amount *</label><input type="number" id="f-amount" min="0.01" step="0.01" /></div>
-    <div class="field mb"><label>Method</label>
-      <select id="f-method"><option value="cash">Cash</option><option value="card">Card</option><option value="bank">Bank transfer</option></select>
+    <div class="field mb"><label>${t('payment.amount')}</label><input type="number" id="f-amount" min="0.01" step="0.01" /></div>
+    <div class="field mb"><label>${t('payment.method')}</label>
+      <select id="f-method"><option value="cash">${t('pos.cash')}</option><option value="card">${t('pos.card')}</option><option value="bank">${t('payment.bank')}</option></select>
     </div>
-    <div class="field mb"><label>Date</label><input type="date" id="f-date" value="${today()}" /></div>
-    <div class="field"><label>Notes</label><input type="text" id="f-notes" /></div>
+    <div class="field mb"><label>${t('payment.date')}</label><input type="date" id="f-date" value="${today()}" /></div>
+    <div class="field"><label>${t('customer.notes')}</label><input type="text" id="f-notes" /></div>
     `,
-    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-success" onclick="savePayment('${customerId}')">Record Payment</button>`
+    `<button class="btn btn-outline" onclick="closeModal()">${t('common.cancel')}</button>
+     <button class="btn btn-success" onclick="savePayment('${customerId}')">${t('payment.record')}</button>`
   );
 }
 
@@ -739,7 +730,7 @@ async function savePayment(customerId) {
   try {
     await api('/api/payments', { method: 'POST', body: JSON.stringify(payload) });
     closeModal();
-    toast('Payment recorded');
+    toast(t('payment.recorded'));
     navigate('customers');
   } catch (err) {
     toast(err.message, 'error');
@@ -753,24 +744,14 @@ async function customerHistory(customerId) {
   ]);
 
   const rows = [
-    ...sales.map((s) => ({
-      date: s.date,
-      label: `Sale #${s.number}`,
-      type: 'sale',
-      amount: s.total,
-    })),
-    ...payments.map((p) => ({
-      date: p.date,
-      label: `Payment (${p.method})`,
-      type: 'payment',
-      amount: p.amount,
-    })),
+    ...sales.map((s) => ({ date: s.date, label: `${t('history.sale')} #${s.number}`, type: 'sale', amount: s.total })),
+    ...payments.map((p) => ({ date: p.date, label: `${t('history.payment')} (${p.method})`, type: 'payment', amount: p.amount })),
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   openModal(
-    'Customer History',
+    t('history.title'),
     `<div class="table-wrap"><table>
-      <thead><tr><th>Date</th><th>Description</th><th class="text-right">Amount</th></tr></thead>
+      <thead><tr><th>${t('history.date')}</th><th>${t('history.description')}</th><th class="text-right">${t('expense.amount')}</th></tr></thead>
       <tbody>
         ${
           rows.length
@@ -779,17 +760,15 @@ async function customerHistory(customerId) {
                   (r) => `<tr>
                     <td>${fmtDate(r.date)}</td>
                     <td>${escapeHtml(r.label)}</td>
-                    <td class="text-right ${r.type === 'sale' ? 'amount-neg' : 'amount-pos'}">${
-                      r.type === 'sale' ? '−' : '+'
-                    }${money(r.amount)}</td>
+                    <td class="text-right ${r.type === 'sale' ? 'amount-neg' : 'amount-pos'}">${r.type === 'sale' ? '−' : '+'}${money(r.amount)}</td>
                   </tr>`
                 )
                 .join('')
-            : '<tr><td colspan="3" class="empty-state">No history</td></tr>'
+            : `<tr><td colspan="3" class="empty-state">${t('history.empty')}</td></tr>`
         }
       </tbody>
     </table></div>`,
-    `<button class="btn btn-outline" onclick="closeModal()">Close</button>`
+    `<button class="btn btn-outline" onclick="closeModal()">${t('common.close')}</button>`
   );
 }
 
@@ -800,12 +779,12 @@ async function renderSuppliers(el) {
   const suppliers = await api('/api/suppliers');
   el.innerHTML = `
     <div class="page-header">
-      <div><h1>🚚 Suppliers</h1><p class="subtitle">Your vendors</p></div>
-      <button class="btn btn-primary" onclick="supplierModal(null)">+ Add Supplier</button>
+      <div><h1>🚚 ${t('suppliers.title')}</h1><p class="subtitle">${t('suppliers.subtitle')}</p></div>
+      <button class="btn btn-primary" onclick="supplierModal(null)">${t('suppliers.add')}</button>
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Email</th><th></th></tr></thead>
+        <thead><tr><th>${t('supplier.name')}</th><th>${t('supplier.contact')}</th><th>${t('customer.phone')}</th><th>${t('customer.email')}</th><th></th></tr></thead>
         <tbody>
           ${suppliers
             .map(
@@ -815,12 +794,12 @@ async function renderSuppliers(el) {
                 <td>${escapeHtml(s.phone || '—')}</td>
                 <td>${escapeHtml(s.email || '—')}</td>
                 <td class="text-right">
-                  <button class="btn btn-outline btn-sm" onclick='supplierModal(${JSON.stringify(s)})'>Edit</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteSupplier('${s._id}')">Delete</button>
+                  <button class="btn btn-outline btn-sm" onclick='supplierModal(${JSON.stringify(s)})'>${t('common.edit')}</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteSupplier('${s._id}')">${t('common.delete')}</button>
                 </td>
               </tr>`
             )
-            .join('') || '<tr><td colspan="5" class="empty-state">No suppliers yet</td></tr>'}
+            .join('') || `<tr><td colspan="5" class="empty-state">${t('supplier.empty')}</td></tr>`}
         </tbody>
       </table></div>
     </div>
@@ -830,20 +809,20 @@ async function renderSuppliers(el) {
 function supplierModal(supplier) {
   const isEdit = !!supplier;
   openModal(
-    isEdit ? 'Edit Supplier' : 'Add Supplier',
+    isEdit ? t('supplier.editTitle') : t('supplier.addTitle'),
     `
     <div class="form-row">
-      <div class="field"><label>Name *</label><input type="text" id="f-name" value="${escapeHtml(supplier?.name || '')}" /></div>
-      <div class="field"><label>Contact Name</label><input type="text" id="f-contact" value="${escapeHtml(supplier?.contactName || '')}" /></div>
+      <div class="field"><label>${t('supplier.name')} *</label><input type="text" id="f-name" value="${escapeHtml(supplier?.name || '')}" /></div>
+      <div class="field"><label>${t('supplier.contact')}</label><input type="text" id="f-contact" value="${escapeHtml(supplier?.contactName || '')}" /></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Phone</label><input type="text" id="f-phone" value="${escapeHtml(supplier?.phone || '')}" /></div>
-      <div class="field"><label>Email</label><input type="text" id="f-email" value="${escapeHtml(supplier?.email || '')}" /></div>
+      <div class="field"><label>${t('customer.phone')}</label><input type="text" id="f-phone" value="${escapeHtml(supplier?.phone || '')}" /></div>
+      <div class="field"><label>${t('customer.email')}</label><input type="text" id="f-email" value="${escapeHtml(supplier?.email || '')}" /></div>
     </div>
-    <div class="field"><label>Address</label><input type="text" id="f-address" value="${escapeHtml(supplier?.address || '')}" /></div>
+    <div class="field"><label>${t('location.address')}</label><input type="text" id="f-address" value="${escapeHtml(supplier?.address || '')}" /></div>
     `,
-    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-primary" onclick="saveSupplier('${isEdit ? supplier._id : ''}')">Save</button>`
+    `<button class="btn btn-outline" onclick="closeModal()">${t('common.cancel')}</button>
+     <button class="btn btn-primary" onclick="saveSupplier('${isEdit ? supplier._id : ''}')">${t('common.save')}</button>`
   );
 }
 
@@ -862,7 +841,7 @@ async function saveSupplier(id) {
       await api('/api/suppliers', { method: 'POST', body: JSON.stringify(payload) });
     }
     closeModal();
-    toast('Supplier saved');
+    toast(t('supplier.saved'));
     navigate('suppliers');
   } catch (err) {
     toast(err.message, 'error');
@@ -870,10 +849,10 @@ async function saveSupplier(id) {
 }
 
 async function deleteSupplier(id) {
-  if (!confirm('Delete this supplier?')) return;
+  if (!confirm(t('supplier.confirmDelete'))) return;
   try {
     await api(`/api/suppliers/${id}`, { method: 'DELETE' });
-    toast('Supplier deleted');
+    toast(t('supplier.deleted'));
     navigate('suppliers');
   } catch (err) {
     toast(err.message, 'error');
@@ -884,20 +863,15 @@ async function deleteSupplier(id) {
 // PURCHASES
 // ============================================================
 async function renderPurchases(el) {
-  const [purchases, products, suppliers] = await Promise.all([
-    api('/api/purchases'),
-    api('/api/products'),
-    api('/api/suppliers'),
-  ]);
-
+  const purchases = await api('/api/purchases');
   el.innerHTML = `
     <div class="page-header">
-      <div><h1>📦 Purchases</h1><p class="subtitle">Restock orders</p></div>
-      <button class="btn btn-primary" onclick="purchaseModal()">+ New Purchase</button>
+      <div><h1>📦 ${t('purchases.title')}</h1><p class="subtitle">${t('purchases.subtitle')}</p></div>
+      <button class="btn btn-primary" onclick="purchaseModal()">${t('purchases.add')}</button>
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>#</th><th>Date</th><th>Items</th><th class="text-right">Total Cost</th></tr></thead>
+        <thead><tr><th>${t('purchase.number')}</th><th>${t('purchase.date')}</th><th>${t('purchase.items')}</th><th class="text-right">${t('purchase.totalCost')}</th></tr></thead>
         <tbody>
           ${purchases
             .map(
@@ -908,7 +882,7 @@ async function renderPurchases(el) {
                 <td class="text-right amount-neg">${money(p.totalCost)}</td>
               </tr>`
             )
-            .join('') || '<tr><td colspan="4" class="empty-state">No purchases yet</td></tr>'}
+            .join('') || `<tr><td colspan="4" class="empty-state">${t('purchase.empty')}</td></tr>`}
         </tbody>
       </table></div>
     </div>
@@ -917,29 +891,28 @@ async function renderPurchases(el) {
 
 function purchaseModal() {
   openModal(
-    'New Purchase (Restock)',
+    t('purchase.newTitle'),
     `
-    <div class="field mb"><label>Product *</label>
-      <select id="f-product"><option value="">— Select product —</option></select>
+    <div class="field mb"><label>${t('purchase.product')}</label>
+      <select id="f-product"><option value="">${t('purchase.selectProduct')}</option></select>
     </div>
     <div class="form-row">
-      <div class="field"><label>Quantity *</label><input type="number" id="f-qty" min="1" value="1" /></div>
-      <div class="field"><label>Cost Price</label><input type="number" id="f-cost" step="0.01" /></div>
+      <div class="field"><label>${t('purchase.quantity')}</label><input type="number" id="f-qty" min="1" value="1" /></div>
+      <div class="field"><label>${t('purchase.cost')}</label><input type="number" id="f-cost" step="0.01" /></div>
     </div>
-    <div class="field mb"><label>Date</label><input type="date" id="f-date" value="${today()}" /></div>
-    <div class="field"><label>Notes</label><input type="text" id="f-notes" /></div>
+    <div class="field mb"><label>${t('purchase.date')}</label><input type="date" id="f-date" value="${today()}" /></div>
+    <div class="field"><label>${t('customer.notes')}</label><input type="text" id="f-notes" /></div>
     `,
-    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-primary" onclick="savePurchase()">Save Purchase</button>`
+    `<button class="btn btn-outline" onclick="closeModal()">${t('common.cancel')}</button>
+     <button class="btn btn-primary" onclick="savePurchase()">${t('common.save')}</button>`
   );
 
-  // Populate products
   api('/api/products').then((products) => {
     const sel = document.getElementById('f-product');
     products.forEach((p) => {
       const opt = document.createElement('option');
       opt.value = p._id;
-      opt.textContent = `${p.name} (stock: ${p.stock})`;
+      opt.textContent = `${p.name} (${t('table.stock')}: ${p.stock})`;
       sel.appendChild(opt);
     });
   });
@@ -951,7 +924,7 @@ async function savePurchase() {
   const costPrice = parseFloat(document.getElementById('f-cost').value) || 0;
 
   if (!productId || quantity <= 0) {
-    toast('Select a product and valid quantity', 'error');
+    toast(t('purchase.selectError'), 'error');
     return;
   }
 
@@ -963,7 +936,7 @@ async function savePurchase() {
   try {
     await api('/api/purchases', { method: 'POST', body: JSON.stringify(payload) });
     closeModal();
-    toast('Purchase recorded');
+    toast(t('purchase.recorded'));
     navigate('purchases');
   } catch (err) {
     toast(err.message, 'error');
@@ -979,12 +952,12 @@ async function renderExpenses(el) {
 
   el.innerHTML = `
     <div class="page-header">
-      <div><h1>💸 Expenses</h1><p class="subtitle">Total: ${money(total)}</p></div>
-      <button class="btn btn-primary" onclick="expenseModal()">+ Add Expense</button>
+      <div><h1>💸 ${t('expenses.title')}</h1><p class="subtitle">${t('expenses.subtitle')} ${money(total)}</p></div>
+      <button class="btn btn-primary" onclick="expenseModal()">${t('expenses.add')}</button>
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="text-right">Amount</th><th></th></tr></thead>
+        <thead><tr><th>${t('expense.date')}</th><th>${t('expense.description')}</th><th>${t('expense.category')}</th><th class="text-right">${t('expense.amount')}</th><th></th></tr></thead>
         <tbody>
           ${expenses
             .map(
@@ -993,10 +966,10 @@ async function renderExpenses(el) {
                 <td>${escapeHtml(e.description)}</td>
                 <td><span class="badge expense">${escapeHtml(e.category)}</span></td>
                 <td class="text-right amount-neg">${money(e.amount)}</td>
-                <td class="text-right"><button class="btn btn-danger btn-sm" onclick="deleteExpense('${e._id}')">Delete</button></td>
+                <td class="text-right"><button class="btn btn-danger btn-sm" onclick="deleteExpense('${e._id}')">${t('common.delete')}</button></td>
               </tr>`
             )
-            .join('') || '<tr><td colspan="5" class="empty-state">No expenses yet</td></tr>'}
+            .join('') || `<tr><td colspan="5" class="empty-state">${t('expense.empty')}</td></tr>`}
         </tbody>
       </table></div>
     </div>
@@ -1005,20 +978,20 @@ async function renderExpenses(el) {
 
 function expenseModal() {
   openModal(
-    'Add Expense',
+    t('expense.addTitle'),
     `
     <div class="form-row">
-      <div class="field"><label>Description *</label><input type="text" id="f-desc" /></div>
-      <div class="field"><label>Category</label><input type="text" id="f-category" placeholder="e.g. Rent, Utilities" /></div>
+      <div class="field"><label>${t('expense.descLabel')}</label><input type="text" id="f-desc" /></div>
+      <div class="field"><label>${t('expense.catLabel')}</label><input type="text" id="f-category" placeholder="${t('expense.catPlaceholder')}" /></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Amount *</label><input type="number" id="f-amount" min="0.01" step="0.01" /></div>
-      <div class="field"><label>Date</label><input type="date" id="f-date" value="${today()}" /></div>
+      <div class="field"><label>${t('expense.amountLabel')}</label><input type="number" id="f-amount" min="0.01" step="0.01" /></div>
+      <div class="field"><label>${t('expense.date')}</label><input type="date" id="f-date" value="${today()}" /></div>
     </div>
-    <div class="field"><label>Notes</label><input type="text" id="f-notes" /></div>
+    <div class="field"><label>${t('customer.notes')}</label><input type="text" id="f-notes" /></div>
     `,
-    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-primary" onclick="saveExpense()">Save</button>`
+    `<button class="btn btn-outline" onclick="closeModal()">${t('common.cancel')}</button>
+     <button class="btn btn-primary" onclick="saveExpense()">${t('common.save')}</button>`
   );
 }
 
@@ -1033,7 +1006,7 @@ async function saveExpense() {
   try {
     await api('/api/expenses', { method: 'POST', body: JSON.stringify(payload) });
     closeModal();
-    toast('Expense recorded');
+    toast(t('expense.recorded'));
     navigate('expenses');
   } catch (err) {
     toast(err.message, 'error');
@@ -1041,10 +1014,10 @@ async function saveExpense() {
 }
 
 async function deleteExpense(id) {
-  if (!confirm('Delete this expense?')) return;
+  if (!confirm(t('expense.confirmDelete'))) return;
   try {
     await api(`/api/expenses/${id}`, { method: 'DELETE' });
-    toast('Expense deleted');
+    toast(t('expense.deleted'));
     navigate('expenses');
   } catch (err) {
     toast(err.message, 'error');
@@ -1055,17 +1028,19 @@ async function deleteExpense(id) {
 // LOCATIONS
 // ============================================================
 async function renderLocations(el) {
-  const locations = await api('/api/locations');
-  const byLocation = await api('/api/dashboard/by-location');
+  const [locations, byLocation] = await Promise.all([
+    api('/api/locations'),
+    api('/api/dashboard/by-location'),
+  ]);
 
   el.innerHTML = `
     <div class="page-header">
-      <div><h1>📍 Locations</h1><p class="subtitle">Where you sell</p></div>
-      <button class="btn btn-primary" onclick="locationModal(null)">+ Add Location</button>
+      <div><h1>📍 ${t('locations.title')}</h1><p class="subtitle">${t('locations.subtitle')}</p></div>
+      <button class="btn btn-primary" onclick="locationModal(null)">${t('locations.add')}</button>
     </div>
     <div class="card">
       <div class="table-wrap"><table>
-        <thead><tr><th>Name</th><th>Type</th><th>Address</th><th class="text-right">Revenue</th><th></th></tr></thead>
+        <thead><tr><th>${t('location.name')}</th><th>${t('location.type')}</th><th>${t('location.address')}</th><th class="text-right">${t('table.revenue')}</th><th></th></tr></thead>
         <tbody>
           ${locations
             .map((l) => {
@@ -1076,12 +1051,12 @@ async function renderLocations(el) {
                 <td>${escapeHtml(l.address || '—')}</td>
                 <td class="text-right amount-pos">${money(rev)}</td>
                 <td class="text-right">
-                  <button class="btn btn-outline btn-sm" onclick='locationModal(${JSON.stringify(l)})'>Edit</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteLocation('${l._id}')">Delete</button>
+                  <button class="btn btn-outline btn-sm" onclick='locationModal(${JSON.stringify(l)})'>${t('common.edit')}</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteLocation('${l._id}')">${t('common.delete')}</button>
                 </td>
               </tr>`;
             })
-            .join('') || '<tr><td colspan="5" class="empty-state">No locations yet</td></tr>'}
+            .join('') || `<tr><td colspan="5" class="empty-state">${t('location.empty')}</td></tr>`}
         </tbody>
       </table></div>
     </div>
@@ -1091,22 +1066,22 @@ async function renderLocations(el) {
 function locationModal(location) {
   const isEdit = !!location;
   openModal(
-    isEdit ? 'Edit Location' : 'Add Location',
+    isEdit ? t('location.editTitle') : t('location.addTitle'),
     `
     <div class="form-row">
-      <div class="field"><label>Name *</label><input type="text" id="f-name" value="${escapeHtml(location?.name || '')}" /></div>
-      <div class="field"><label>Type</label>
+      <div class="field"><label>${t('location.name')} *</label><input type="text" id="f-name" value="${escapeHtml(location?.name || '')}" /></div>
+      <div class="field"><label>${t('location.type')}</label>
         <select id="f-type">
-          <option value="store" ${location?.type === 'store' ? 'selected' : ''}>Store</option>
-          <option value="warehouse" ${location?.type === 'warehouse' ? 'selected' : ''}>Warehouse</option>
-          <option value="market-stall" ${location?.type === 'market-stall' ? 'selected' : ''}>Market stall</option>
+          <option value="store" ${location?.type === 'store' ? 'selected' : ''}>${t('location.store')}</option>
+          <option value="warehouse" ${location?.type === 'warehouse' ? 'selected' : ''}>${t('location.warehouse')}</option>
+          <option value="market-stall" ${location?.type === 'market-stall' ? 'selected' : ''}>${t('location.stall')}</option>
         </select>
       </div>
     </div>
-    <div class="field"><label>Address</label><input type="text" id="f-address" value="${escapeHtml(location?.address || '')}" /></div>
+    <div class="field"><label>${t('location.address')}</label><input type="text" id="f-address" value="${escapeHtml(location?.address || '')}" /></div>
     `,
-    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-primary" onclick="saveLocation('${isEdit ? location._id : ''}')">Save</button>`
+    `<button class="btn btn-outline" onclick="closeModal()">${t('common.cancel')}</button>
+     <button class="btn btn-primary" onclick="saveLocation('${isEdit ? location._id : ''}')">${t('common.save')}</button>`
   );
 }
 
@@ -1123,7 +1098,7 @@ async function saveLocation(id) {
       await api('/api/locations', { method: 'POST', body: JSON.stringify(payload) });
     }
     closeModal();
-    toast('Location saved');
+    toast(t('location.saved'));
     navigate('locations');
   } catch (err) {
     toast(err.message, 'error');
@@ -1131,10 +1106,10 @@ async function saveLocation(id) {
 }
 
 async function deleteLocation(id) {
-  if (!confirm('Delete this location?')) return;
+  if (!confirm(t('location.confirmDelete'))) return;
   try {
     await api(`/api/locations/${id}`, { method: 'DELETE' });
-    toast('Location deleted');
+    toast(t('location.deleted'));
     navigate('locations');
   } catch (err) {
     toast(err.message, 'error');
@@ -1154,30 +1129,30 @@ async function renderReports(el) {
 
   el.innerHTML = `
     <div class="page-header">
-      <div><h1>📈 Reports</h1><p class="subtitle">Business performance</p></div>
+      <div><h1>📈 ${t('reports.title')}</h1><p class="subtitle">${t('reports.subtitle')}</p></div>
     </div>
 
     <div class="grid grid-3">
-      <div class="kpi"><span class="label">Revenue</span><span class="value positive">${money(summary.revenue)}</span></div>
-      <div class="kpi"><span class="label">Expenses</span><span class="value negative">${money(summary.expenses)}</span></div>
-      <div class="kpi"><span class="label">Net Income</span><span class="value ${summary.netIncome >= 0 ? 'positive' : 'negative'}">${money(summary.netIncome)}</span></div>
-      <div class="kpi"><span class="label">Gross Profit</span><span class="value accent">${money(summary.profit)}</span></div>
-      <div class="kpi"><span class="label">Purchases</span><span class="value">${money(summary.purchases)}</span></div>
-      <div class="kpi"><span class="label">Payments Received</span><span class="value">${money(summary.payments)}</span></div>
+      ${kpiCard('💰', t('kpi.revenue'), money(summary.revenue), 'positive', 'linear-gradient(90deg,#16a34a,#22c55e)')}
+      ${kpiCard('💸', t('kpi.expenses'), money(summary.expenses), 'negative', 'linear-gradient(90deg,#ef4444,#f87171)')}
+      ${kpiCard('📈', t('kpi.netIncome'), money(summary.netIncome), summary.netIncome >= 0 ? 'positive' : 'negative', 'linear-gradient(90deg,#4f46e5,#7c3aed)')}
+      ${kpiCard('🏆', t('kpi.grossProfit'), money(summary.profit), 'accent', 'linear-gradient(90deg,#f59e0b,#fbbf24)')}
+      ${kpiCard('📦', t('kpi.purchases'), money(summary.purchases), '', 'linear-gradient(90deg,#0ea5e9,#38bdf8)')}
+      ${kpiCard('💳', t('kpi.payments'), money(summary.payments), '', 'linear-gradient(90deg,#14b8a6,#2dd4bf)')}
     </div>
 
     <div class="card mt">
-      <h2>Daily Revenue vs Expenses</h2>
+      <h2>${t('reports.daily')}</h2>
       ${renderBarChart(chart)}
     </div>
 
     <div class="grid grid-2 mt">
       <div class="card">
-        <h2>Revenue & Profit by Location</h2>
+        <h2>${t('reports.byLocation')}</h2>
         ${
           byLocation.length
             ? `<table>
-                <thead><tr><th>Location</th><th class="text-right">Revenue</th><th class="text-right">Profit</th></tr></thead>
+                <thead><tr><th>${t('location.name')}</th><th class="text-right">${t('table.revenue')}</th><th class="text-right">${t('table.profit')}</th></tr></thead>
                 <tbody>${byLocation
                   .map(
                     (b) => `<tr>
@@ -1188,15 +1163,15 @@ async function renderReports(el) {
                   )
                   .join('')}</tbody>
               </table>`
-            : '<p class="empty-state">No location data</p>'
+            : `<p class="empty-state">${t('reports.noLocationData')}</p>`
         }
       </div>
       <div class="card">
-        <h2>Top Products</h2>
+        <h2>${t('reports.topProducts')}</h2>
         ${
           topProducts.length
             ? `<table>
-                <thead><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Revenue</th><th class="text-right">Profit</th></tr></thead>
+                <thead><tr><th>${t('table.product')}</th><th class="text-right">${t('table.qty')}</th><th class="text-right">${t('table.revenue')}</th><th class="text-right">${t('table.profit')}</th></tr></thead>
                 <tbody>${topProducts
                   .map(
                     (p) => `<tr>
@@ -1208,7 +1183,7 @@ async function renderReports(el) {
                   )
                   .join('')}</tbody>
               </table>`
-            : '<p class="empty-state">No sales data</p>'
+            : `<p class="empty-state">${t('reports.noSalesData')}</p>`
         }
       </div>
     </div>
@@ -1223,11 +1198,11 @@ async function renderSettings(el) {
 
   el.innerHTML = `
     <div class="page-header">
-      <div><h1>⚙️ Settings</h1><p class="subtitle">App configuration</p></div>
+      <div><h1>⚙️ ${t('settings.title')}</h1><p class="subtitle">${t('settings.subtitle')}</p></div>
     </div>
     <div class="card" style="max-width:520px">
-      <div class="field mb"><label>Business Name</label><input type="text" id="f-bizname" value="${escapeHtml(s.businessName || '')}" /></div>
-      <div class="field mb"><label>Currency</label>
+      <div class="field mb"><label>${t('settings.businessName')}</label><input type="text" id="f-bizname" value="${escapeHtml(s.businessName || '')}" /></div>
+      <div class="field mb"><label>${t('settings.currency')}</label>
         <select id="f-currency">
           <option value="USD" ${s.currency === 'USD' ? 'selected' : ''}>USD ($)</option>
           <option value="UZS" ${s.currency === 'UZS' ? 'selected' : ''}>UZS (so'm)</option>
@@ -1235,7 +1210,14 @@ async function renderSettings(el) {
           <option value="RUB" ${s.currency === 'RUB' ? 'selected' : ''}>RUB (₽)</option>
         </select>
       </div>
-      <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+      <div class="field mb"><label>${t('settings.language')}</label>
+        <select id="f-language" onchange="setLanguage(this.value)">
+          <option value="en" ${getLanguage() === 'en' ? 'selected' : ''}>English</option>
+          <option value="uz" ${getLanguage() === 'uz' ? 'selected' : ''}>O'zbekcha</option>
+          <option value="ru" ${getLanguage() === 'ru' ? 'selected' : ''}>Русский</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">${t('settings.save')}</button>
     </div>
   `;
 }
@@ -1250,7 +1232,7 @@ async function saveSettings() {
     settings.businessName = payload.businessName;
     settings.currency = payload.currency;
     document.getElementById('brand-name').textContent = payload.businessName || 'Market Manager';
-    toast('Settings saved');
+    toast(t('settings.saved'));
     navigate('settings');
   } catch (err) {
     toast(err.message, 'error');
@@ -1260,7 +1242,6 @@ async function saveSettings() {
 // ============================================================
 // INIT
 // ============================================================
-// Expose navigate globally for inline onclick handlers
 window.navigate = navigate;
 window.posAddToCart = posAddToCart;
 window.posRenderCart = posRenderCart;
@@ -1271,8 +1252,8 @@ window.posFilterProducts = posFilterProducts;
 window.productModal = productModal;
 window.saveProduct = saveProduct;
 window.deleteProduct = deleteProduct;
-window.updateProfitPreview = updateProfitPreview;
 window.filterProducts = filterProducts;
+window.updateProfitPreview = updateProfitPreview;
 window.customerModal = customerModal;
 window.saveCustomer = saveCustomer;
 window.filterCustomers = filterCustomers;
@@ -1299,9 +1280,10 @@ async function init() {
     settings.businessName = s.businessName || 'Market Manager';
     settings.currency = s.currency || 'USD';
     document.getElementById('brand-name').textContent = settings.businessName;
-  } catch (_) {
-    // settings endpoint may not exist yet; ignore
-  }
+  } catch (_) {}
+
+  // Apply static translations (nav, sidebar)
+  if (typeof applyStaticTranslations === 'function') applyStaticTranslations();
 
   document.querySelectorAll('.nav-item').forEach((btn) => {
     btn.addEventListener('click', () => navigate(btn.dataset.view));
