@@ -274,7 +274,7 @@ async function renderPOS(el) {
           ${products
             .map(
               (p) => `
-            <div class="product-tile ${p.stock <= 0 ? 'out' : ''}" data-id="${p._id}" onclick="posAddToCart('${p._id}')">
+            <div class="product-tile ${p.stock <= 0 ? 'out' : ''}" data-id="${p._id}" data-price="${p.sellPrice}" onclick="posAddToCart('${p._id}')">
               <div class="pname">${escapeHtml(p.name)}</div>
               <div class="pprice">${money(p.sellPrice)}</div>
               <div class="pstock">${t('pos.stock')} ${p.stock}</div>
@@ -366,8 +366,7 @@ function posRenderCart() {
     .map((item, idx) => {
       const tile = listEl?.querySelector(`[data-id="${item.productId}"]`);
       const name = tile?.querySelector('.pname')?.textContent || item.productId;
-      const priceText = tile?.querySelector('.pprice')?.textContent || '$0';
-      const price = parseFloat(priceText.replace(/[^0-9.-]/g, '')) || 0;
+      const price = parseFloat(tile?.dataset.price) || 0;
       const lineTotal = price * item.quantity;
       subtotal += lineTotal;
 
@@ -435,8 +434,7 @@ async function posSubmitSale() {
 
   const items = cart.map((item) => {
     const tile = document.querySelector(`#pos-product-grid [data-id="${item.productId}"]`);
-    const priceText = tile?.querySelector('.pprice')?.textContent || '0';
-    const sellPrice = parseFloat(priceText.replace(/[^0-9.-]/g, '')) || 0;
+    const sellPrice = parseFloat(tile?.dataset.price) || 0;
     return { productId: item.productId, quantity: item.quantity, sellPrice };
   });
 
